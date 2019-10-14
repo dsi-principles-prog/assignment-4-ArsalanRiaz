@@ -1,0 +1,121 @@
+---
+title: "20-Explore"
+output: html_notebook
+---
+
+# Checking the summary to have an idea of the data
+```{r checking summary}
+summary(ufc)
+
+
+
+```
+
+# validating the rows for non zero values
+
+```{r Verifing for non zero values}
+
+ufc %>% 
+  verify(nrow(.) > 0)
+
+
+
+```
+
+# Checking for NAs in all the data set
+
+```{r checking for NAs}
+ufc %>% 
+  assert(not_na,everything())
+```
+
+# Removing NAs
+
+```{r removing NAs}
+ufcrefined <- na.omit(ufc)
+as.data.frame(ufcrefined)
+
+
+
+```
+
+
+
+
+
+
+# Checking for specific values in winner and title bout
+```{r assert to check the values in winner and title bout}
+
+ufcrefined %>% 
+  assert(in_set("Red","Blue", "Draw"), winner)
+
+ufcrefined %>% 
+  assert(in_set("TRUE","FALSE"),title_bout)
+
+
+```
+
+
+Checking for the ranges 
+
+```{r checking the ranges}
+ufcrefined %>% 
+  assert(within_bounds(0,10000), -date, - location, - winner, -r_fighter, -b_fighter, -referee,-title_bout, -weight_class, -b_stance, -r_stance)
+
+
+  
+```
+
+CHecking the ages
+
+```{r checking the ages}
+ufcrefined %>% 
+  assert(within_bounds(0,120), b_age)
+
+
+ufcrefined %>% 
+  assert(within_bounds(0,120), r_age)
+
+```
+
+# Making a bar plot to count the number of fights in each category
+
+```{r bar plot to count the number of fights in each weight category}
+#library(ggplot2)
+
+#unique(ufcrefined$weight_class)
+ufcrefined %>% 
+     ggplot(aes(weight_class)) + 
+  geom_bar(stat = "count", na.rm = T, fill = "steelblue", color = "black") + 
+  scale_y_continuous(breaks = seq(0,800,100)) + 
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 50,hjust = 1,vjust = 1),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank()) + 
+  geom_text(stat = "Count",aes(label = ..count..),vjust = -0.1)
+
+
+```
+
+#Making a boxplot to identify outliers in the columns of UFC data
+```{r identify outliers}
+selected <- c("b_avg_opp_total_str_att",
+"b_avg_distance_landed",
+"b_avg_head_landed",
+"b_avg_head_att",
+"b_avg_total_str_landed")
+
+
+ ggplot(stack( ufcrefined[,selected]),aes(x = ind, y = values)) + 
+   geom_boxplot(na.rm = T) + 
+   theme_bw() + 
+    theme(axis.text.x = element_text(angle = 50,hjust = 1,vjust = 1),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank())
+ 
+ 
+ 
+
+```
+

@@ -1,0 +1,117 @@
+---
+title: "30 - Feature Engineering"
+output: html_notebook
+---
+
+# The code chunk is to extract the year, month and day from the date column. Any date column can be used and it will split it into year, month and day
+
+
+```{r function to split dates into year month and date}
+
+datepart <- function(df,x){
+  
+  {{df}} %>% 
+    mutate(Year = year({{x}}),
+           Month = month({{x}}),
+           Day = wday({{x}})) %>% 
+    select(Year,Month,Day,everything())
+  
+}
+
+
+ufcrefined <- datepart(ufcrefined,date)
+
+
+```
+
+
+# This is a technique known as one hot encoding where i give the winner in the red corner a value of 0 and the winner in the blue corner a value of 1. 
+
+```{r  one-hot-encoding to change red win to 0 and blue to 1}
+
+
+
+  #ufcrefined$winner_onehot_encode <- ifelse(ufcrefined$winner=='Red', 0, 1)
+   
+
+changingwinnertoonesandzeros <- function(df,x) {
+  {{df}} %>% 
+  mutate(winner_onehot_encode = ifelse({{x}} == 'Red',0,1)) %>% 
+    select(winner_onehot_encode, everything())
+  }
+
+ufcrefined <- changingwinnertoonesandzeros(ufcrefined,winner) 
+
+
+
+```
+
+
+# A technique for making ML algorithms faster. Windorizing. The outliers are identified from any column and will be replaced with the value of the Q3
+
+```{r Identifying outliers and replacing them with Q3 of the same column}
+#Winsorization
+
+
+windorizing <- function(df,x) {
+  #bench <- 114.25 + 1.5*IQR(ufcrefined$b_avg_opp_total_str_att)
+  
+ # becnh %>%  ((quantile(x)[4]) + 1.5*IQR(x))
+            
+df %>% 
+     mutate(b_avg_opp_total_str_att_new  = ifelse({{x}} > ((quantile({{x}})[4]) + 1.5*IQR({{x}})), ((quantile({{x}})[4]) + 1.5*IQR({{x}})), {{x}})) %>% 
+    select(b_avg_opp_total_str_att_new,everything()) 
+    
+  }
+ufcrefined <- winsorizing(ufcrefined,b_avg_opp_total_str_att)
+  
+
+
+```
+
+# There are two functions in this chunk. One is to standardize the values in any column and the other is to to give a various number of columns as a list in order to standardize all of them.
+
+```{r  Standardizing function and applying on different columns}
+
+scale2 <-  function(x, na.rm = TRUE) (x - mean(x, na.rm = na.rm))/ sd(x, na.rm = na.rm) 
+
+calc_by_weightclass <- function(df, vars ) {
+  df %>% 
+    group_by(weight_class) %>% 
+    mutate_at(vars, list(std_weightclass = scale2)) %>% 
+    ungroup() %>% 
+    select(weight_class, contains ("std_weightclass"), everything()) %>% 
+    arrange(weight_class)
+  
+  
+}
+
+
+
+ufcrefined <- ufcrefined %>% 
+  calc_by_department(c("b_avg_clinch_att", "b_avg_clinch_landed", "b_avg_body_landed",
+                       "b_avg_opp_body_landed", "r_avg_ground_landed","r_avg_leg_landed"))
+
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
